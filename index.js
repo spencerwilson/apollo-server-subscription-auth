@@ -129,6 +129,15 @@ const server = new ApolloServer({
     // The value returned from this function is `connection.context` on the
     // ExpressContext passed to the context resolver above.
     onConnect: (connectionParams, webSocket, connectionContext) => {
+      // Uncomment this to see the connection error and end immediately, with no
+      // data sent back.
+      // throw new Error('foo');
+
+      // Uncomment this to see the requested subscription root field's `subscribe`
+      // STILL be called(??!!). Fortunatelly, from the client's perspective, it's
+      // still an immediate error.
+      return false;
+
       // ! connectionParams.headers are a plain object. Be sure to be case-insensitive
       // ! when looking for a given header! Below, we can only detect "Authorization"
       // ! exactly.
