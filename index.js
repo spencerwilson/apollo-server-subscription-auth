@@ -1,4 +1,4 @@
-const { ApolloServer, gql } = require("apollo-server");
+const { ApolloServer, gql, ForbiddenError } = require("apollo-server");
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -57,7 +57,7 @@ const resolvers = {
         console.log("done; context:", context);
         if (context.user === "rando") {
           console.error("rando blocked");
-          throw new Error("AuthorizationError");
+          throw new ForbiddenError("rando not authorized");
         }
         console.log("subscribe returning");
         return createIntegers();
@@ -70,6 +70,29 @@ const resolvers = {
         console.log("[resolve] rootValue:", rootValue, "context:", context);
         return rootValue ** 2;
       },
+
+      failDemo: {
+        // Since the above just has the effect of sending a single `{}` response event,
+        // here's an approach that's no worse, but maybe slightly better?
+        subscribe: async (_, args, context, info) => {
+          // Assume for the demonstration that the subscription should fail.
+          console.log(
+            "[subscribe for failDemo] creating a one-shot AsyncIterator"
+          );
+          function* error() {
+            yield { success: false, reason: new Exception("not authorized") };
+          }
+          return error();
+        },
+
+        // Map events (values) from the Source Stream--the AsyncIterator that `subscribe`
+        // prepared--to events on the Result Stream. Called once per value yielded from
+        // the Source Stream. The `rootValue` is the value from the Source Stream.
+        resolve: (rootValue, args, context, info) => {
+          console.log("[resolve] rootValue:", rootValue, "context:", context);
+          if (!rootValue.success) return Promise.reject(rootValue.reason);
+        },
+      },
     },
   },
 };
@@ -81,11 +104,21 @@ const server = new ApolloServer({
   rootValue: "blah",
   // context is resolved once per operation, regardless of type. For subscriptions,
   // it's resolved after `onConnect` but before calling `subscribe`. The context
-  // resolved here is the same object given to subsequent all calls of `subscribe` and
+  // resolved here is the same object given to all subsequent calls of `subscribe` and
   // `resolve` for a given subscription instance.
   context: (expressContext) => {
-    console.log("context initializer called");
-    return { user: expressContext.connection.context.user };
+    console.log(
+      "context initializer called; expressContext:",
+      Object.keys(expressContext)
+    );
+
+    if (expressContext.connection) {
+      // Operation is via WebSocket.
+      return { user: expressContext.connection.context.user };
+    }
+
+    // Operation is via HTTP request.
+    return { user: "http" };
   },
   subscriptions: {
     // The value returned from this function is `connection.context` on the
@@ -97,6 +130,31 @@ const server = new ApolloServer({
       return { user: connectionParams.headers["Authorization"] };
     },
   },
+
+  plugins: [
+    {
+      serverWillStart() {
+        console.log("Server starting up!");
+      },
+      // ! NONE of these get called at any point during subscriptions.
+      requestDidStart() {
+        return {
+          willResolveField(...args) {
+            console.log("RESOLVING FIELD");
+            console.log(...args);
+          },
+          didEncounterErrors(...args) {
+            console.log("DID ERROR");
+            console.log(...args);
+          },
+          willSendResponse(...args) {
+            console.log("willSendResponse");
+            console.log(...args);
+          },
+        };
+      },
+    },
+  ],
 });
 server.listen().then(({ url }) => {
   console.log(`Server ready at ${url}`);
