@@ -10,7 +10,10 @@ const typeDefs = gql`
 
   type Subscription {
     "Squares of your favorite integers!"
-    squares: Int
+    squares: Int!
+
+    "Demonstrate failing inside 'resolve'."
+    failDemo: Boolean
   }
 `;
 
@@ -70,28 +73,28 @@ const resolvers = {
         console.log("[resolve] rootValue:", rootValue, "context:", context);
         return rootValue ** 2;
       },
+    },
 
-      failDemo: {
-        // Since the above just has the effect of sending a single `{}` response event,
-        // here's an approach that's no worse, but maybe slightly better?
-        subscribe: async (_, args, context, info) => {
-          // Assume for the demonstration that the subscription should fail.
-          console.log(
-            "[subscribe for failDemo] creating a one-shot AsyncIterator"
-          );
-          function* error() {
-            yield { success: false, reason: new Exception("not authorized") };
-          }
-          return error();
-        },
+    failDemo: {
+      // Since the above just has the effect of sending a single `{}` response event,
+      // here's an approach that's no worse, but maybe slightly better?
+      subscribe: async (_, args, context, info) => {
+        // Assume for the demonstration that the subscription should fail.
+        console.log(
+          "[subscribe for failDemo] creating a one-shot AsyncIterator"
+        );
+        function* error() {
+          yield { success: false, reason: new Exception("not authorized") };
+        }
+        return error();
+      },
 
-        // Map events (values) from the Source Stream--the AsyncIterator that `subscribe`
-        // prepared--to events on the Result Stream. Called once per value yielded from
-        // the Source Stream. The `rootValue` is the value from the Source Stream.
-        resolve: (rootValue, args, context, info) => {
-          console.log("[resolve] rootValue:", rootValue, "context:", context);
-          if (!rootValue.success) return Promise.reject(rootValue.reason);
-        },
+      // Map events (values) from the Source Stream--the AsyncIterator that `subscribe`
+      // prepared--to events on the Result Stream. Called once per value yielded from
+      // the Source Stream. The `rootValue` is the value from the Source Stream.
+      resolve: (rootValue, args, context, info) => {
+        console.log("[resolve] rootValue:", rootValue, "context:", context);
+        if (!rootValue.success) return Promise.reject(rootValue.reason);
       },
     },
   },
@@ -111,6 +114,8 @@ const server = new ApolloServer({
       "context initializer called; expressContext:",
       Object.keys(expressContext)
     );
+
+    console.log(expressContext);
 
     if (expressContext.connection) {
       // Operation is via WebSocket.
