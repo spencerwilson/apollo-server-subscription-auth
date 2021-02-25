@@ -21,8 +21,7 @@ This repo has some code to prototype different approaches. It demonstrates:
 * `resolve`'s first argument is the source event, of type `T`, from the Source Stream.
 * Both can return promises.
 * The `context` object is resolved after `onConnect`, but before calling resolvers. The same object is passed to both resolvers, for the life of the subscription request.
-* If `subscribe` rejects, an empty `{}` is given to the client and the subscription stays open.
-* If `resolve` rejects, an error is given to the client and the subscription stays open.
+* If either `subscribe` or `resolve` reject, an error is given to the client and the subscription closes (at least in GraphQL Playground).
 * If `onConnect` throws, the client sees an immediate error, no data.
 * If `onConnect` returns `false`, the client sees an immediate error and no data **but the `subscribe` resolver still gets called(!)**
   * This could be a DoS attack vector: spam a GraphQL API with unauthenticated subscription requests. It'll deny your connections, but still be creating many AsyncIterators that might not be GC-able.
