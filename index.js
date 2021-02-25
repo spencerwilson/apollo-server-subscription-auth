@@ -59,7 +59,6 @@ const resolvers = {
         await delay(2000);
         console.log("done; context:", context);
         if (context.user === "rando") {
-          console.error("rando blocked");
           throw new ForbiddenError("rando not authorized");
         }
         console.log("subscribe returning");
@@ -76,8 +75,6 @@ const resolvers = {
     },
 
     failDemo: {
-      // Since the above just has the effect of sending a single `{}` response event,
-      // here's an approach that's no worse, but maybe slightly better?
       subscribe: async (_, args, context, info) => {
         // Assume for the demonstration that the subscription should fail.
         console.log(
@@ -86,7 +83,7 @@ const resolvers = {
         async function* error() {
           yield {
             success: false,
-            reason: new ForbiddenError("not authorized"),
+            reason: new ForbiddenError("not authorized from 'resolve'"),
           };
         }
         return error();
@@ -151,6 +148,9 @@ const server = new ApolloServer({
 
       return { user: headers["Authorization"] };
     },
+    onDisconnect: () => {
+        console.log('disconnected');
+    }
   },
 
   plugins: [

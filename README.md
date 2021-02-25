@@ -22,7 +22,7 @@ This repo has some code to prototype different approaches. It demonstrates:
 * Both can return promises.
 * The `context` object is resolved after `onConnect`, but before calling resolvers. The same object is passed to both resolvers, for the life of the subscription request.
 * If `subscribe` rejects, an empty `{}` is given to the client and the subscription stays open.
-* If `resolve` rejects, an error is given to the client and the subscription closes.
+* If `resolve` rejects, an error is given to the client and the subscription stays open.
 * If `onConnect` throws, the client sees an immediate error, no data.
 * If `onConnect` returns `false`, the client sees an immediate error and no data **but the `subscribe` resolver still gets called(!)**
   * This could be a DoS attack vector: spam a GraphQL API with unauthenticated subscription requests. It'll deny your connections, but still be creating many AsyncIterators that might not be GC-able.
@@ -32,55 +32,96 @@ This repo has some code to prototype different approaches. It demonstrates:
 
 ## Examples
 
-Tested using [graphqurl](https://github.com/hasura/graphqurl) as the client.
+Tested using [GraphQL Playground](https://github.com/graphql/graphql-playground) as the client.
 
 **An authorized person, `alice`, subscribes to a stream of squares of non-negative integers.**
 
+```graphql
+subscription {
+  squares
+}
 ```
-gq http://localhost:4000/graphql -H 'Authorization: alice' -q 'subscription { squares }'
-Executing query... event received
+
+```
 {
   "data": {
     "squares": 0
   }
 }
-Waiting... event received
 {
   "data": {
     "squares": 1
   }
 }
-Waiting... event received
 {
   "data": {
     "squares": 4
   }
 }
-Waiting... event received
 {
   "data": {
     "squares": 9
   }
 }
-Waiting... ⣟
-^C
+...
 ```
 
 **An unauthorized person, `rando`, does the same. `subscribe` rejects when it recognizes this.**
 
 ```
-gq http://localhost:4000/graphql -H 'Authorization: rando' -q 'subscription { squares }'
-Executing query... event received
-{}
-Waiting... ⣟
-^C
+{
+  "errors": [
+    {
+      "message": "rando not authorized",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "squares"
+      ],
+      "extensions": {
+        "code": "FORBIDDEN"
+      }
+    }
+  ]
+}
+<subscription listening stops>
 ```
 
 **A demo of a "later" rejection: instead of `subscribe` rejecting, what if just yields a single, error-describing value?**
 
+```graphql
+subscription {
+  failDemo
+}
 ```
-gq http://localhost:4000/graphql -H 'Authorization: rando' -q 'subscription { failDemo }'
-Executing query... error
-^C
+
+```
+{
+  "errors": [
+    {
+      "message": "not authorized from 'resolve'",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "failDemo"
+      ],
+      "extensions": {
+        "code": "FORBIDDEN"
+      }
+    }
+  ],
+  "data": {
+    "failDemo": null
+  }
+}
+<subscription listening stops>
 ```
 
