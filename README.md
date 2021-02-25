@@ -32,8 +32,7 @@ This repo has some code to prototype different approaches. It demonstrates:
 * If `onConnect` throws, the client sees an immediate error, no data.
 * If `onConnect` returns `false`, the client sees an immediate error and no data **but the `subscribe` resolver still gets called(!)**
   * This could be a DoS attack vector: spam a GraphQL API with unauthenticated subscription requests. It'll deny your connections, but still be creating many AsyncIterators that might not be GC-able.
-* None of the request lifecycle plugin hooks get called for subscriptions, at all.
-  * Seems like a bug, or worth calling out in the docs at least.
+* None of the request lifecycle plugin hooks get called for subscriptions, at all. ([#4354](https://github.com/apollographql/apollo-server/issues/4354))
 * Lastly, just FYI: if you're considering using `withFilter` from [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions), maybe hold off at least until its open memory leak bug, [#212](https://github.com/apollographql/graphql-subscriptions/issues/212), is fixed. An alternative might be to write your own `filter` that supports taking an `AsyncIterator` as an argument.
 
 ## Examples
