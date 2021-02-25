@@ -136,7 +136,7 @@ const server = new ApolloServer({
       // Uncomment this to see the requested subscription root field's `subscribe`
       // STILL be called(??!!). Fortunatelly, from the client's perspective, it's
       // still an immediate error.
-      return false;
+      // return false;
 
       // ! connectionParams.headers are a plain object. Be sure to be case-insensitive
       // ! when looking for a given header! Below, we can only detect "Authorization"
