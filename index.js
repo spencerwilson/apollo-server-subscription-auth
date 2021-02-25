@@ -83,7 +83,7 @@ const resolvers = {
         console.log(
           "[subscribe for failDemo] creating a one-shot AsyncIterator"
         );
-        function* error() {
+        async function* error() {
           yield { success: false, reason: new Exception("not authorized") };
         }
         return error();
