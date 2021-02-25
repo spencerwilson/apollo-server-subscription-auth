@@ -48,8 +48,6 @@ const resolvers = {
       // As each value yielded from the returned AsyncIterator should map to an event
       // sent to the client, perform any filtering here as well.
       //
-      // Note: Nothing happens if `subscribe` throws or rejections. This is
-      //
       // Note: the first argument is unused! (It's not the server's `rootValue`?)
       // The `context` passed here and to `resolve` is the same object, computed
       // from the `context` Server option after `onConnect`.
