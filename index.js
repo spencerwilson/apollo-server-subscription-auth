@@ -84,7 +84,10 @@ const resolvers = {
           "[subscribe for failDemo] creating a one-shot AsyncIterator"
         );
         async function* error() {
-          yield { success: false, reason: new Exception("not authorized") };
+          yield {
+            success: false,
+            reason: new ForbiddenError("not authorized"),
+          };
         }
         return error();
       },
@@ -141,7 +144,12 @@ const server = new ApolloServer({
       // ! connectionParams.headers are a plain object. Be sure to be case-insensitive
       // ! when looking for a given header! Below, we can only detect "Authorization"
       // ! exactly.
-      return { user: connectionParams.headers["Authorization"] };
+      console.log("connectionParams", connectionParams);
+
+      // First variant is for graphqurl, second is for GraphQL Playground.
+      const headers = connectionParams.headers || connectionParams;
+
+      return { user: headers["Authorization"] };
     },
   },
 
