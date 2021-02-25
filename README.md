@@ -1,6 +1,6 @@
 # Subscriptions in Apollo Server
 
-In [#1248](https://github.com/apollographql/apollo-server/issues/1248), discussion [#4690](https://github.com/apollographql/apollo-server/discussions/4690), and elsewhere, people have been unsure of how to do auth-related things on subscriptions with Apollo Server:
+In [#1248](https://github.com/apollographql/apollo-server/issues/1248), discussion [#4690](https://github.com/apollographql/apollo-server/discussions/4690), [#90](https://github.com/apollographql/graphql-subscriptions/issues/90) in graphql-subscriptions, and elsewhere, people have been unsure of how to do auth-related things on subscriptions with Apollo Server:
 
 1. When should authentication be performed? In `onConnect` or in the server's `context` resolver function?
 2. When + how should authorization policies be evaluated on a subscription? E.g., imagine a client requests to subscribe to `newMessages` on a private chat that they don't belong to.
