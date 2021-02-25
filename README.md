@@ -1,5 +1,12 @@
 # Subscriptions in Apollo Server
 
+**TL;DR**
+
+* You can implement "fail if the request isn't authenticated" in multiple places, but `onConnect` is preferred as it ensures unauthenticated traffic can't take up a connection (whereas if the failure is later, the closing of a subscription may not be sufficient to close the WebSocket; the client may remain connected)
+* You **can** implement arbitrary authorization logic in either `subscribe` or the lesser-known `resolve` functions of a subscription root field definition. And both can be async.
+
+----
+
 In [#1248](https://github.com/apollographql/apollo-server/issues/1248), discussion [#4690](https://github.com/apollographql/apollo-server/discussions/4690), [#90](https://github.com/apollographql/graphql-subscriptions/issues/90) in graphql-subscriptions, and elsewhere, people have been unsure of how to do auth-related things on subscriptions with Apollo Server:
 
 1. When should authentication be performed? In `onConnect` or in the server's `context` resolver function?
