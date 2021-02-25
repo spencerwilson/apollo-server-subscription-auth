@@ -3,7 +3,7 @@
 **TL;DR**
 
 * You can implement "fail if the request isn't authenticated" in multiple places, but `onConnect` is preferred as it ensures unauthenticated traffic can't take up a connection (whereas if the failure is later, the closing of a subscription may not be sufficient to close the WebSocket; the client may remain connected)
-* You **can** implement arbitrary authorization logic in either `subscribe` or the lesser-known `resolve` functions of a subscription root field definition. And both can be async.
+* You **can** implement arbitrary authorization (or other cancelation) logic in either `subscribe` or the lesser-known `resolve` functions of a subscription root field definition. And both can be async.
 
 ----
 
